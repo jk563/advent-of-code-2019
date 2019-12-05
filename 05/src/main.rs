@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 fn main() {
     let mut program = read_input();
     let mut instruction_pointer = 0;
-    let (new_program, next_instruction_pointer, stop) = perform_instruction(program, instruction_pointer, Some(1));
+    let (new_program, next_instruction_pointer, stop) = perform_instruction(program, instruction_pointer, Some(5));
         let mut halt = stop;
         program = new_program;
         instruction_pointer = next_instruction_pointer;
@@ -46,7 +46,8 @@ fn get_parameter(program: &Vec<String>, argument_index: usize, parameter_mode: P
 
 fn perform_instruction(mut program: Vec<String>, instruction_pointer: usize, input: Option<isize>) -> (Vec<String>, usize, bool) {
     let instruction = Instruction::from(&program[instruction_pointer]);
-
+    let mut instruction_changed = false;
+    let mut next_instruction_pointer = instruction_pointer;
     let parameter_1 = match instruction.opcode {
         Opcode::Halt => isize::try_from(instruction_pointer).unwrap(),
         _ => get_parameter(&program, instruction_pointer + 1, ParameterMode::ImmediateMode),
@@ -58,7 +59,7 @@ fn perform_instruction(mut program: Vec<String>, instruction_pointer: usize, inp
                 program[usize::try_from(parameter_1).unwrap()] = input_integer.to_string();
             }
         },
-        Opcode::Output => println!("Test Delta: {}", program[usize::try_from(parameter_1).unwrap()]),
+        Opcode::Output => println!("Output: {}", program[usize::try_from(parameter_1).unwrap()]),
         Opcode::Add | Opcode::Multiply => {
             let parameter_1 = get_parameter(&program, instruction_pointer + 1, instruction.first_parameter_mode);
             let parameter_2 = get_parameter(&program, instruction_pointer + 2, instruction.second_parameter_mode);
@@ -72,12 +73,60 @@ fn perform_instruction(mut program: Vec<String>, instruction_pointer: usize, inp
 
             program[usize::try_from(parameter_3).unwrap()] = result.to_string();
         },
+        Opcode::JumpTrue => {
+            let parameter_1 = get_parameter(&program, instruction_pointer + 1, instruction.first_parameter_mode);
+            let parameter_2 = get_parameter(&program, instruction_pointer + 2, instruction.second_parameter_mode);
+
+            if parameter_1 > 0 {
+                instruction_changed = true;
+                next_instruction_pointer = usize::try_from(parameter_2).unwrap();
+            }
+        },
+        Opcode::JumpFalse => {
+            let parameter_1 = get_parameter(&program, instruction_pointer + 1, instruction.first_parameter_mode);
+            let parameter_2 = get_parameter(&program, instruction_pointer + 2, instruction.second_parameter_mode);
+
+            if parameter_1 == 0 {
+                instruction_changed = true;
+                next_instruction_pointer = usize::try_from(parameter_2).unwrap();
+            }
+        },
+        Opcode::Less => {
+            let parameter_1 = get_parameter(&program, instruction_pointer + 1, instruction.first_parameter_mode);
+            let parameter_2 = get_parameter(&program, instruction_pointer + 2, instruction.second_parameter_mode);
+            let parameter_3 = get_parameter(&program, instruction_pointer + 3, ParameterMode::ImmediateMode);
+            
+            let result = match parameter_1 < parameter_2 {
+                true => 1,
+                false => 0,
+            };
+
+            program[usize::try_from(parameter_3).unwrap()] = result.to_string();
+        },
+        Opcode::Equal => {
+            let parameter_1 = get_parameter(&program, instruction_pointer + 1, instruction.first_parameter_mode);
+            let parameter_2 = get_parameter(&program, instruction_pointer + 2, instruction.second_parameter_mode);
+            let parameter_3 = get_parameter(&program, instruction_pointer + 3, ParameterMode::ImmediateMode);
+            
+            let result = match parameter_1 == parameter_2 {
+                true => 1,
+                false => 0,
+            };
+
+            program[usize::try_from(parameter_3).unwrap()] = result.to_string();
+        },
         _ => (),
     }
 
-    let next_instruction_pointer = match instruction.opcode {
+    next_instruction_pointer = match instruction.opcode {
         Opcode::Input | Opcode::Output => instruction_pointer + 2,
-        Opcode::Add | Opcode::Multiply => instruction_pointer + 4,
+        Opcode::Add | Opcode::Multiply | Opcode::Less | Opcode::Equal => instruction_pointer + 4,
+        Opcode::JumpTrue | Opcode::JumpFalse => {
+            match instruction_changed {
+                true => next_instruction_pointer,
+                false => instruction_pointer + 3,
+            }
+        }
         _ => instruction_pointer,
     };
     
@@ -91,6 +140,10 @@ enum Opcode {
     Multiply,
     Input,
     Output,
+    JumpTrue,
+    JumpFalse,
+    Less,
+    Equal,
     Halt,
     Unset,
 }
@@ -106,8 +159,12 @@ impl Opcode {
             "02" | "2" => return Opcode::Multiply,
             "03" | "3" => return Opcode::Input,
             "04" | "4" => return Opcode::Output,
+            "05" | "5" => return Opcode::JumpTrue,
+            "06" | "6" => return Opcode::JumpFalse,
+            "07" | "7" => return Opcode::Less,
+            "08" | "8" => return Opcode::Equal,
             "99" => return Opcode::Halt,
-            _ => return Opcode::Unset,
+            _ => panic!(),
         };
     }
 }

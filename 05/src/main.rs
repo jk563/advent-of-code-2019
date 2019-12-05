@@ -1,8 +1,19 @@
 use std::fs;
+use std::convert::TryFrom;
 
 fn main() {
-    let mut input = read_input();
-    input = perform_instruction(input, 0);
+    let mut program = read_input();
+    let mut instruction_pointer = 0;
+    let (new_program, next_instruction_pointer, stop) = perform_instruction(program, instruction_pointer, Some(1));
+        let mut halt = stop;
+        program = new_program;
+        instruction_pointer = next_instruction_pointer;
+    while !halt {
+        let (new_program, next_instruction_pointer, stop) = perform_instruction(program.clone(), instruction_pointer, None);
+        halt = stop;
+        program = new_program;
+        instruction_pointer = next_instruction_pointer;
+    }
 }
 
 #[derive(Debug)]
@@ -18,7 +29,6 @@ impl Default for ParameterMode {
 
 impl ParameterMode {
     fn from(mode: &str) -> ParameterMode {
-        println!("{}", mode);
         match mode {
             "1" => return ParameterMode::ImmediateMode,
             "0" | _ => return ParameterMode::PositionMode,
@@ -26,29 +36,52 @@ impl ParameterMode {
     }
 }
 
-fn perform_instruction(mut program: Vec<String>, instruction_pointer: usize) -> Vec<String> {
-    let instruction = Instruction::from(&program[instruction_pointer]);
-    
-    if instruction.opcode == Opcode::Halt {()}
-
-    let arguments: Vec<String> = match instruction.opcode {
-        Opcode::Add | Opcode::Multiply => vec![program[instruction_pointer + 1].to_string(), program[instruction_pointer + 2].to_string(), program[instruction_pointer + 3].to_string()],
-        Opcode::Input | Opcode::Output => vec![program[instruction_pointer + 1].to_string()],
-        _ => Vec::new(),
-    };
-
-    let parameter_1 = match instruction.first_parameter_mode {
-        ParameterMode::ImmediateMode => 
+fn get_parameter(program: &Vec<String>, argument_index: usize, parameter_mode: ParameterMode) -> isize {
+    let argument = program[argument_index].parse::<isize>().unwrap();
+    match parameter_mode {
+        ParameterMode::ImmediateMode => argument,
+        ParameterMode::PositionMode => program[usize::try_from(argument).unwrap()].parse::<isize>().unwrap(),
     }
+}
+
+fn perform_instruction(mut program: Vec<String>, instruction_pointer: usize, input: Option<isize>) -> (Vec<String>, usize, bool) {
+    let instruction = Instruction::from(&program[instruction_pointer]);
+
+    let parameter_1 = match instruction.opcode {
+        Opcode::Halt => isize::try_from(instruction_pointer).unwrap(),
+        _ => get_parameter(&program, instruction_pointer + 1, ParameterMode::ImmediateMode),
+    };
 
     match instruction.opcode {
-        Opcode::Add => {
-            program[0] = "0".to_string();
+        Opcode::Input => {
+            if let Some(input_integer) = input {
+                program[usize::try_from(parameter_1).unwrap()] = input_integer.to_string();
+            }
+        },
+        Opcode::Output => println!("Test Delta: {}", program[usize::try_from(parameter_1).unwrap()]),
+        Opcode::Add | Opcode::Multiply => {
+            let parameter_1 = get_parameter(&program, instruction_pointer + 1, instruction.first_parameter_mode);
+            let parameter_2 = get_parameter(&program, instruction_pointer + 2, instruction.second_parameter_mode);
+            let parameter_3 = get_parameter(&program, instruction_pointer + 3, ParameterMode::ImmediateMode);
+
+            let result = match instruction.opcode {
+                Opcode::Add => parameter_1 + parameter_2,
+                Opcode::Multiply => parameter_1 * parameter_2,
+                _ => 323232323233,
+            };
+
+            program[usize::try_from(parameter_3).unwrap()] = result.to_string();
         },
         _ => (),
-    };
+    }
 
-    program
+    let next_instruction_pointer = match instruction.opcode {
+        Opcode::Input | Opcode::Output => instruction_pointer + 2,
+        Opcode::Add | Opcode::Multiply => instruction_pointer + 4,
+        _ => instruction_pointer,
+    };
+    
+    (program, next_instruction_pointer, instruction.opcode == Opcode::Halt)
 }
 
 #[derive(Debug)]
@@ -95,6 +128,7 @@ impl Instruction {
             match instruction_string.len() {
                 1 | 2 => {
                     instruction.opcode = Opcode::from(instruction_string);
+                    if instruction_string.len() == 2 { instruction_string = &instruction_string[1..]; }
                 },
                 3 => {
                     instruction.first_parameter_mode = ParameterMode::from(&instruction_string[0..1]); 
@@ -164,13 +198,16 @@ mod tests {
     #[test]
     fn test_perform_instruction() {
         let input = "1,0,0,3,99";
-        let mut program: Vec<String> = input.trim().split(",").map(|code| code.parse::<String>().unwrap()).collect();
-        let arguments = vec!["0".to_string(), "0".to_string(), "3".to_string()];
-        let instruction = Instruction::from("1");
-        println!("Result: {:?}", program);
-        program = perform_instruction(program, 0);
-        println!("Result: {:?}", program);
-//        assert_eq!(program, "1,0,0,2,99");
-        assert!(false);
+        let program: Vec<String> = input.trim().split(",").map(|code| code.parse::<String>().unwrap()).collect();
+        let (program, _next_instruction, _halt) = perform_instruction(program, 0, None);
+        assert_eq!(program, "1,0,0,2,99".to_string().trim().split(",").map(|code| code.parse::<String>().unwrap()).collect::<Vec<String>>());
+    }
+
+    #[test]
+    fn test_perform_multiply() {
+        let input = "2,3,0,3,99";
+        let program: Vec<String> = input.trim().split(",").map(|code| code.parse::<String>().unwrap()).collect();
+        let (program, _next_instruction, _halt) = perform_instruction(program, 0, None);
+        assert_eq!(program, "2,3,0,6,99".to_string().trim().split(",").map(|code| code.parse::<String>().unwrap()).collect::<Vec<String>>());
     }
 }

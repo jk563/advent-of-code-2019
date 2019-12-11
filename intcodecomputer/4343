@@ -22,7 +22,7 @@ impl Instruction {
 
         for x in 1..=(opcode.parameter_count()) {
             // Get the digit corrosponding to the parameter mode
-            let mode_integer = (instruction_code / 10) / (10_usize.pow(u32::try_from(x).unwrap())) % 10;
+            let mode_integer = (instruction_code / 100) / 1.max(10 * (x - 1)) % 10;
             parameter_modes.push(ParameterMode::from(mode_integer));
         }
         
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn test_execute_relativebase() {
-        let expected_memory = vec![109,2,2201,5,3,3,99];
+        let expected_memory = vec![109,2,2201,101,3,3,99];
         let expected_relative_base = 2;
 
         let mut memory = vec![109,2,2201,-1,3,3,99];

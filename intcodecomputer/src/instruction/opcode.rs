@@ -9,6 +9,7 @@ pub enum Opcode {
     JumpFalse,
     Less,
     Equal,
+    RelativeBase,
     Halt,
 }
 
@@ -23,6 +24,7 @@ impl Opcode {
             6 => Opcode::JumpFalse,
             7 => Opcode::Less,
             8 => Opcode::Equal,
+            9 => Opcode::RelativeBase,
             99 => Opcode::Halt,
             _ => panic!("Opcode not recognised: {}", opcode),
         }
@@ -32,7 +34,7 @@ impl Opcode {
         match self {
             Opcode::Add | Opcode::Multiply | Opcode::Less | Opcode::Equal => 3,
             Opcode::JumpTrue | Opcode::JumpFalse => 2,
-            Opcode::Input | Opcode::Output => 1,
+            Opcode::Input | Opcode::Output | Opcode:: RelativeBase => 1,
             Opcode::Halt => 0,
         }
     }
@@ -52,6 +54,7 @@ mod tests {
         let opcode_from_6 = Opcode::from(6);
         let opcode_from_7 = Opcode::from(7);
         let opcode_from_8 = Opcode::from(8);
+        let opcode_from_9 = Opcode::from(9);
         let opcode_from_99 = Opcode::from(99);
 
         assert_eq!(opcode_from_1, Opcode::Add);
@@ -62,6 +65,7 @@ mod tests {
         assert_eq!(opcode_from_6, Opcode::JumpFalse);
         assert_eq!(opcode_from_7, Opcode::Less);
         assert_eq!(opcode_from_8, Opcode::Equal);
+        assert_eq!(opcode_from_9, Opcode::RelativeBase);
         assert_eq!(opcode_from_99, Opcode::Halt);
     }
 
@@ -75,6 +79,7 @@ mod tests {
         assert_eq!(Opcode::JumpFalse.parameter_count(), 2);
         assert_eq!(Opcode::Less.parameter_count(), 3);
         assert_eq!(Opcode::Equal.parameter_count(), 3);
+        assert_eq!(Opcode::RelativeBase.parameter_count(), 1);
         assert_eq!(Opcode::Halt.parameter_count(), 0);
     }
 }

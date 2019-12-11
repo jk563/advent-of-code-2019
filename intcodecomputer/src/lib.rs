@@ -7,6 +7,7 @@ use std::collections::VecDeque;
 pub struct IntcodeComputer {
     pub memory: Vec<isize>,
     position: usize,
+    relative_base: usize,
 }
 
 impl IntcodeComputer {
@@ -14,12 +15,15 @@ impl IntcodeComputer {
         IntcodeComputer {
             memory: Vec::new(),
             position: 0,
+            relative_base: 0,
         }
     }
 
     pub fn load(&mut self, program: &Vec<isize>) {
         self.memory = program.clone();
+        self.memory.resize(1000000,0);
         self.position = 0;
+        self.relative_base = 0;
     }
 
     pub fn run(&mut self, input_option: Option<Vec<isize>>) -> Vec<isize> {
@@ -38,7 +42,7 @@ impl IntcodeComputer {
                 true => Some(inputs.pop_front().unwrap()),
                 false => None,
             };
-            match instruction.execute(&mut self.memory, &mut self.position, input) {
+            match instruction.execute(&mut self.memory, &mut self.position, &mut self.relative_base, input) {
                 Some(output) => outputs.push(output),
                 None => (),
             };
@@ -49,7 +53,7 @@ impl IntcodeComputer {
     }
 
     fn load_instruction(&self) -> Instruction {
-        Instruction::from(&self.memory, self.position)
+        Instruction::from(&self.memory, self.position, self.relative_base)
     }
 
 }

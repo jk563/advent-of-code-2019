@@ -2,7 +2,8 @@
 #[derive(PartialEq)]
 pub enum ParameterMode {
     PositionalMode,
-    ImmediateMode
+    ImmediateMode,
+    RelativeMode,
 }
 
 impl ParameterMode {
@@ -10,6 +11,7 @@ impl ParameterMode {
         match input {
             0 => ParameterMode::PositionalMode,
             1 => ParameterMode::ImmediateMode,
+            2 => ParameterMode::RelativeMode,
             _ => panic!("ParameterMode not implemented: {}", input),
         }
     }
@@ -23,5 +25,6 @@ mod tests {
     fn test_from() {
         assert_eq!(ParameterMode::from(0), ParameterMode::PositionalMode);
         assert_eq!(ParameterMode::from(1), ParameterMode::ImmediateMode);
+        assert_eq!(ParameterMode::from(2), ParameterMode::RelativeMode);
     }
 }

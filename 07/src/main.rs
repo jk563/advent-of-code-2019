@@ -1,19 +1,17 @@
 use std::fs;
 
-mod intcodecomputer;
 use intcodecomputer::IntcodeComputer;
 
 fn main() {
-    let input: Vec<isize> = fs::read_to_string("input_day_7.txt").unwrap().trim().split(",").map(|code| code.parse::<isize>().unwrap()).collect();
+    let input: Vec<isize> = fs::read_to_string("input.txt").unwrap().trim().split(",").map(|code| code.parse::<isize>().unwrap()).collect();
 
-    let mut amp1 = IntcodeComputer::new();
-    let mut amp2 = IntcodeComputer::new();
-    let mut amp3 = IntcodeComputer::new();
-    let mut amp4 = IntcodeComputer::new();
-    let mut amp5 = IntcodeComputer::new();
+    let amp1 = IntcodeComputer::new();
+    let amp2 = IntcodeComputer::new();
+    let amp3 = IntcodeComputer::new();
+    let amp4 = IntcodeComputer::new();
+    let amp5 = IntcodeComputer::new();
 
     let mut highest_thrust = 0;
-    let mut amp_number = 0;
     let mut amps = vec![amp1, amp2, amp3, amp4, amp5];
     for combination in generate_combinations() {
         amps[0].load(&input);
@@ -43,8 +41,6 @@ fn main() {
 
     println!("Highest Thrust: {}", highest_thrust);
 }
-
-
 
 fn generate_combinations() -> Vec<Vec<isize>> {
     let mut combinations: Vec<Vec<isize>> = Vec::new();

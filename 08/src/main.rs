@@ -1,9 +1,7 @@
 use std::fs;
-use std::io;
-use std::io::Write;
 
 fn main() {
-    let input: Vec<u32> = fs::read_to_string("input_day_8.txt").unwrap().trim().chars().map(|code| code.to_digit(10).unwrap()).collect();
+    let input: Vec<u32> = fs::read_to_string("input.txt").unwrap().trim().chars().map(|code| code.to_digit(10).unwrap()).collect();
 
     let width = 25;
     let height = 6;

@@ -3,4 +3,11 @@
 [[package]]
 name = "aoc5"
 version = "0.1.0"
+dependencies = [
+ "intcodecomputer 0.1.0",
+]
+
+[[package]]
+name = "intcodecomputer"
+version = "0.1.0"
 

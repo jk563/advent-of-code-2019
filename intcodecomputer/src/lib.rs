@@ -7,7 +7,6 @@ use std::collections::VecDeque;
 pub struct IntcodeComputer {
     pub memory: Vec<isize>,
     position: usize,
-    relative_base: isize,
 }
 
 impl IntcodeComputer {
@@ -15,14 +14,12 @@ impl IntcodeComputer {
         IntcodeComputer {
             memory: Vec::new(),
             position: 0,
-            relative_base: 0,
         }
     }
 
     pub fn load(&mut self, program: &Vec<isize>) {
         self.memory = program.clone();
         self.position = 0;
-        self.relative_base = 0;
     }
 
     pub fn run(&mut self, input_option: Option<Vec<isize>>) -> Vec<isize> {
@@ -34,14 +31,14 @@ impl IntcodeComputer {
         let mut outputs: Vec<isize> = vec![];
 
         while instruction.opcode != Opcode::Halt {
-            if (instruction.opcode == Opcode::Input) && inputs.len() == 0 {
+            if (instruction.opcode == Opcode::Input ) && inputs.len() == 0 {
                 break;
             }
             let input = match instruction.opcode == Opcode::Input {
                 true => Some(inputs.pop_front().unwrap()),
                 false => None,
             };
-            match instruction.execute(&mut self.memory, &mut self.position, &mut self.relative_base, input) {
+            match instruction.execute(&mut self.memory, &mut self.position, input) {
                 Some(output) => outputs.push(output),
                 None => (),
             };
@@ -52,7 +49,7 @@ impl IntcodeComputer {
     }
 
     fn load_instruction(&self) -> Instruction {
-        Instruction::from(&self.memory, self.position, self.relative_base)
+        Instruction::from(&self.memory, self.position)
     }
 
 }
@@ -68,7 +65,6 @@ mod tests {
         let expected_memory = Vec::new();
         assert_eq!(computer.memory, expected_memory);
         assert_eq!(computer.position, 0);
-        assert_eq!(computer.relative_base, 0);
     }
 
     #[test]
@@ -87,12 +83,10 @@ mod tests {
         let program = vec![2, 1, 3];
 
         computer.position = 50;
-        computer.position = 50;
         computer.load(&program);
 
         assert_eq!(computer.memory, program);
         assert_eq!(computer.position, 0);
-        assert_eq!(computer.relative_base, 0);
     }
 
     #[test]

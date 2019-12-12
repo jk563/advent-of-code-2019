@@ -40,10 +40,14 @@ impl Instruction {
         let mut parameter_positions: Vec<usize> = Vec::new();
 
         for param_index in 1..=param_count {
-            parameter_positions.push(match self.parameter_modes[param_index - 1] {
+            let parameter_position = match self.parameter_modes[param_index - 1] {
                     ParameterMode::PositionalMode => usize::try_from(memory[position + param_index]).unwrap(),
                     ParameterMode::ImmediateMode => position + param_index,
                     ParameterMode::RelativeMode => usize::try_from(isize::try_from(relative_base).unwrap() + memory[position + param_index]).unwrap(),
+            };
+            parameter_positions.push(match parameter_position < memory.len() {
+                true => parameter_position,
+                false => 0,
             });
         };
 

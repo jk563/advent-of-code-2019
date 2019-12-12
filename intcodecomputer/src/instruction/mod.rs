@@ -114,7 +114,7 @@ impl Instruction {
                 *position += 4;
             },
             Opcode::RelativeBase => {
-                *relative_base = usize::try_from(memory[parameter_positions[0]]).unwrap();
+                *relative_base = usize::try_from(isize::try_from(*relative_base).unwrap() + memory[parameter_positions[0]]).unwrap();
                 *position += 2
             },
             _ => panic!("Execute not implemented for opcode: {:?}", self.opcode),
@@ -296,10 +296,10 @@ mod tests {
 
     #[test]
     fn test_execute_relativebase() {
-        let expected_memory = vec![109,2,2201,5,3,3,99];
-        let expected_relative_base = 2;
+        let expected_memory = vec![109,2,109,5,99];
+        let expected_relative_base = 7;
 
-        let mut memory = vec![109,2,2201,-1,3,3,99];
+        let mut memory = vec![109,2,109,5,99];
         let mut position = 0;
         let mut relative_base = 0;
         let instruction = Instruction::from(&memory, position, 0);

@@ -176,6 +176,7 @@ mod tests {
         assert_eq!(expected_output, outputs[0]);
     }
 
+
     #[test]
     fn test_day_2_part_1() {
         let mut computer = IntcodeComputer::new();

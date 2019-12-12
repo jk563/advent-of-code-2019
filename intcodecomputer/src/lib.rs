@@ -21,7 +21,6 @@ impl IntcodeComputer {
 
     pub fn load(&mut self, program: &Vec<isize>) {
         self.memory = program.clone();
-        self.memory.resize(1000000,0);
         self.position = 0;
         self.relative_base = 0;
     }

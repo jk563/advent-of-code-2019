@@ -299,6 +299,19 @@ mod tests {
     }
 
     #[test]
+    fn test_accessing_memory_out_of_range() {
+        let expected_memory = vec![1,5,1,7,99,0,0,5];
+
+        let mut memory = vec![1,5,1,7,99];
+        let instruction = Instruction::from(&memory, 0, 0);
+        let mut position = 0;
+        let mut relative_base = 0;
+        instruction.execute(&mut memory, &mut position, &mut relative_base, None);
+
+        assert_eq!(memory, expected_memory);
+    }
+
+    #[test]
     #[should_panic]
     fn test_execute_halt() {
         let mut memory = vec![2,0,3,3,99];

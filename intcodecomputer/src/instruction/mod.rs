@@ -40,14 +40,16 @@ impl Instruction {
         let mut parameter_positions: Vec<usize> = Vec::new();
 
         for param_index in 1..=param_count {
-            let parameter_position = match self.parameter_modes[param_index - 1] {
-                    ParameterMode::PositionalMode => usize::try_from(memory[position + param_index]).unwrap(),
+            parameter_positions.push(match self.parameter_modes[param_index - 1] {
+                    ParameterMode::PositionalMode => match position + param_index < memory.len() {
+                        true => usize::try_from(memory[position + param_index]).unwrap(),
+                        false => 0,
+                    },
                     ParameterMode::ImmediateMode => position + param_index,
-                    ParameterMode::RelativeMode => usize::try_from(isize::try_from(relative_base).unwrap() + memory[position + param_index]).unwrap(),
-            };
-            parameter_positions.push(match parameter_position < memory.len() {
-                true => parameter_position,
-                false => 0,
+                    ParameterMode::RelativeMode => match position + param_index < memory.len() {
+                        true => usize::try_from(isize::try_from(relative_base).unwrap() + memory[position + param_index]).unwrap(),
+                        false => usize::try_from(isize::try_from(relative_base).unwrap()).unwrap() + 0,
+                    },
             });
         };
 
@@ -57,6 +59,13 @@ impl Instruction {
     pub fn execute(&self, memory: &mut Vec<isize>, position: &mut usize, relative_base: &mut usize, input: Option<isize>) -> Option<isize> {
         let parameter_positions = self.parameter_positions.clone().unwrap();
         let mut output: Option<isize> = None;
+        let mut required_memory_size = memory.len();
+        for parameter_position in parameter_positions.clone() {
+            if parameter_position >= required_memory_size {
+                required_memory_size = parameter_position + 1;
+            };
+        }
+        memory.resize(required_memory_size, 0);
         match self.opcode {
             Opcode::Add => {
                 let result = memory[parameter_positions[0]] + memory[parameter_positions[1]];
